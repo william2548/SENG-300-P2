@@ -1,16 +1,16 @@
-package seng3;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+
 import org.eclipse.jdt.core.dom.*;
 
 public class Iteration1 {
-	public File[] javaFiles;
-	private String type;
-	public String typeSimple;
+	public static ArrayList<String> listOfDirs = new ArrayList<String>();
+	public static File[] javaFiles;
 	public int count_dec;
 	public int count_ref;
 
@@ -18,31 +18,35 @@ public class Iteration1 {
 		int argsLength = args.length;
 		
 		// Throw error if invalid amount of arguments and terminate
-		if (argsLength < 2) {
-			System.out.println("Error: Not enough arguments passed.\nExpected: <directory-pathname> <qualified-name-java-type>");
+		if (argsLength < 1) {
+			System.out.println("Error: Not enough arguments passed.\nExpected: <directory-pathname>");
 			return;
-		} else if (argsLength > 2) {
-			System.out.println("Error: Too many arguments passed.\nExpected: <directory-pathname> <qualified-name-java-type>");
+		} else if (argsLength > 1) {
+			System.out.println("Error: Too many arguments passed.\nExpected: <directory-pathname>");
 			return;
 		}
 		
 		// if correct amount of arguments then create new instance and start work
-		Iteration1 it1 = new Iteration1(args[0], args[1]);
-		
-		for (File javaFile : it1.javaFiles) {
-			String sourceCode;
+		Iteration1 it1 = new Iteration1(args[0]);
+		System.out.println("Current List of Dirs: " + listOfDirs + "\n");
+
+		for(int i = 0; i <= listOfDirs.size() - 1; i++ ) {
+			javaFiles = fileFinder(listOfDirs.get(i));
 			
-			// Try to read the contents of file, if error occurs, skip and go to next file.
-			try {
-				sourceCode = new String(Files.readAllBytes(Paths.get(javaFile.toURI())));
-			} catch (IOException e) {
-				continue;
+			for (File javaFile : it1.javaFiles) {
+				String sourceCode;
+				
+				// Try to read the contents of file, if error occurs, skip and go to next file.
+				try {
+					sourceCode = new String(Files.readAllBytes(Paths.get(javaFile.toURI())));
+				} catch (IOException e) {
+					continue;
+				}
+				
+				// if contents successfully read then parse the contents
+				it1.parse(sourceCode);
 			}
-			
-			// if contents successfully read then parse the contents
-			it1.parse(sourceCode);
 		}
-		
 		// print result
 		it1.print();
 		
@@ -51,21 +55,32 @@ public class Iteration1 {
 	
 	/**
 	 * Iteration1 constructor
-	 * Takes given pathName and typeName and initializes global variables
+	 * Takes given pathName
+	 *  
 	 */
-	public Iteration1(String pathName, String typeName) {
-		javaFiles = fileFinder(pathName);
-		type = typeName;
+	public Iteration1(String pathName) {
+		listOfDirs.add(pathName);			//Might need to change this.. does 
+		File[] files = new File(pathName).listFiles();
+		pathFinder(files);
 		count_dec = 0;
 		count_ref = 0;
-		
-		String[] types = type.split("\\.");
-		if (types.length >= 1) {
-			typeSimple = types[types.length-1];
-		} else {
-			typeSimple = type;
+
+	}
+	
+	/**
+	 * Recursively find all sub-directories 
+	 * add the pathName to an arrayList
+	 * @param files
+	 */
+	public void pathFinder(File[] files) {
+		for(File i : files) {
+			if(i.isDirectory()) {
+				listOfDirs.add(i.toString());
+				pathFinder(i.listFiles());
+			}
 		}
 	}
+	
 	
 	/**
 	 * Code for this method taken and modified from StackOverflow:
@@ -99,21 +114,15 @@ public class Iteration1 {
 		cu.accept(new ASTVisitor() {
 			// Count Declarations
 			public boolean visit(TypeDeclaration node) {
-				String qualifiedName = node.getName().getFullyQualifiedName();
-				//System.out.println("dec: " + qualifiedName);
-				if (typeSimple.equals(qualifiedName)) {
-					count_dec++;
-				}
+				count_dec++;
+
 				return true;
 			}
 			
 			// Count References
 			public boolean 	visit(FieldDeclaration node) {
-				String qualifiedName = node.getType().toString();
-				//System.out.println("ref: " + qualifiedName);
-				if (typeSimple.equals(qualifiedName)) {
-					count_ref++;
-				}
+				count_ref++;
+				
 				return true;
 			}
 		});
@@ -124,6 +133,6 @@ public class Iteration1 {
 	 * Prints the output string
 	 */
 	public void print() {
-		System.out.println(type + "; Declarations found: " + count_dec + "; References found: " + count_ref + ".");
+		System.out.println("Declarations found: " + count_dec + "; References found: " + count_ref + ".");
 	}
 }
