@@ -1,12 +1,16 @@
+// CHANGES: - Changed javaFiles from File[] to ArrayList<File>
+// - Added ArrayList<JarFile> listOfJars
+// - getJarEntries now checks for directories and jars (but is untested; not sure if it actually works)
+// TODO: - Rewrite main function or constructor to call getJarEntries somewhere
+// - Test getJarEntries + debug
+
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.jar.*;
 import java.util.zip.ZipEntry;
@@ -15,7 +19,8 @@ import org.eclipse.jdt.core.dom.*;
 
 public class Iteration2 {
 	public static ArrayList<String> listOfDirs = new ArrayList<String>();
-	public static File[] javaFiles;
+	public static ArrayList<JarFile> listOfJars = new ArrayList<JarFile>();
+	public static ArrayList<File> javaFiles = new ArrayList<File>();
 	public int count_dec;
 	public int count_ref;
 
@@ -36,12 +41,10 @@ public class Iteration2 {
 		System.out.println("Current List of Dirs: " + listOfDirs + "\n");
 
 		for(int i = 0; i <= listOfDirs.size() - 1; i++ ) {
-			javaFiles = fileFinder(listOfDirs.get(i));
+//			javaFiles = fileFinder(listOfDirs.get(i));
+			fileFinder(listOfDirs.get(i));
 			
-			for (File javaFile : it2.javaFiles) {
-//				if (javaFile.getName().endsWith(".jar")) {
-//					javaFiles = getJarEntries(new JarFile(args[0] + "/" + javaFile.getName()));
-//				}
+			for (File javaFile : Iteration2.javaFiles) {
 				String sourceCode;
 				
 				// Try to read the contents of file, if error occurs, skip and go to next file.
@@ -96,65 +99,61 @@ public class Iteration2 {
 	 * 
 	 * This method will return an array of .java files given a directory pathname
 	 */
-	private static File[] fileFinder(String dirName){
+	private static void fileFinder(String dirName){
         File dir = new File(dirName);
-
-        return dir.listFiles(new FilenameFilter() { 
-        	public boolean accept(File dir, String filename) {
-        		return filename.endsWith(".java");
+        File[] dirFiles = dir.listFiles();
+        
+        for (File i : dirFiles) {	
+        	if (i.getName().endsWith(".java")) {
+        		javaFiles.add(i);
         	}
-        });
-    }
+        }
+	}
+        
 	
 	/**
-	 * Adds java files from a jar file to the javaFiles array
+	 * Goes through each entry in a jar file
 	 * @param absolute pathname to jar file
 	 * @throws IOException 
 	 */
-	private static File[] getJarEntries(JarFile jarFile) throws IOException {
-		ArrayList<File> javaFilesCopy = new ArrayList<File>(Arrays.asList(javaFiles));	// Create new ArrayList for java files so we can append to it
+	private static void getJarEntries(JarFile jarFile) throws IOException {
 		Enumeration<JarEntry> jarEnum = jarFile.entries();
-		while (jarEnum.hasMoreElements()) {		// Go through each entry
-			ZipEntry ze = checkIfJava(jarFile, jarEnum.nextElement());				// Check if java
-			
-			if (ze != null) {					// If is java, create InputStream and convert file to String
-				File tempFile = File.createTempFile(jarEnum.nextElement().getName(), ".java");	// Create temp file with same name as file in jar
-				tempFile.deleteOnExit();
-				
-				InputStream inputStream = jarFile.getInputStream(ze);
-				FileOutputStream out = new FileOutputStream(tempFile);
-				byte[] buffer = new byte[1024];
-				int length;
-				while ((length = inputStream.read(buffer)) != -1) {
-				    out.write(buffer, 0, length);
-				}
-				javaFilesCopy.add(tempFile);
-//				System.out.println(javaFilesCopy);
-			}
+		while (jarEnum.hasMoreElements()) {
+			checkFileType(jarFile, jarEnum.nextElement());
 		}
-		File[] javaFiles = new File[javaFilesCopy.size()];
-		javaFiles = javaFilesCopy.toArray(javaFiles);
-		return javaFiles;
-		
 	}
 	
 	/**
-	 * Checks if the jar entry in question ends in .java
-	 * @param jarFile the jar file being checked
-	 * @param jarEntry the JarEntry to check
-	 * @return ZipEntry of jar entry if it is a java file
+	 * Checks a JarEntry and adds it to the appropriate ArrayList if it is java, jar, or directory
+	 * @param jarFile the jar file being checked (needed in order to convert entry to file)
+	 * @param jarEntry the jar entry being checked
+	 * @throws IOException
 	 */
-	// Change method name?
-	private static ZipEntry checkIfJava(JarFile jarFile, Object jarEntry) {
-		JarEntry entry = (JarEntry)jarEntry;
-		String name = entry.getName();
-		if (name.endsWith(".java")) {
-			ZipEntry ze = jarFile.getEntry(name);
-			return ze;
-		}
-		else { 
-			return null;
-		}
+	private static void checkFileType(JarFile jarFile, JarEntry jarEntry) throws IOException {
+			JarEntry entry = jarEntry;
+			String name = entry.getName();
+
+			File tempFile = File.createTempFile(name, "");	// Create temporary file with same name as file in jar
+			tempFile.deleteOnExit();
+
+			ZipEntry ze = jarFile.getEntry(name);			// Convert JarEntry to File
+			InputStream in = jarFile.getInputStream(ze);
+			FileOutputStream out = new FileOutputStream(tempFile);
+			byte[] buffer = new byte[1024];
+			int length;
+			while ((length = in.read(buffer)) != -1) {
+			    out.write(buffer, 0, length);
+			}
+			out.close();
+			
+			if (name.endsWith(".java")) {					// Add to list if appropriate
+				javaFiles.add(tempFile);
+			} else if (name.endsWith(".jar")) {
+				JarFile newJar = new JarFile(name);
+				listOfJars.add(newJar);
+			} else if (tempFile.isDirectory()){
+				listOfDirs.add(name);
+			}
 	}
 
 	/**
