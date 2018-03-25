@@ -57,8 +57,6 @@ public class Iteration2 {
 			// if contents successfully read then parse the contents
 			it2.parse(sourceCode);
 		}
-		System.out.println("All Dec Types: " + typeDecs);
-		System.out.println("All Ref Types: " + typeRefs + "\n");
 		
 		it2.increment();
 	}
