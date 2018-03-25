@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 import org.eclipse.jdt.core.dom.*;
 
-public class Iteration1 {
+public class Iteration2 {
 	public static ArrayList<String> listOfDirs = new ArrayList<String>();
 	public static File[] javaFiles;
 	public int count_dec;
@@ -27,7 +27,7 @@ public class Iteration1 {
 		}
 		
 		// if correct amount of arguments then create new instance and start work
-		Iteration1 it1 = new Iteration1(args[0]);
+		Iteration2 it2 = new Iteration2(args[0]);
 		System.out.println("Current List of Dirs: " + listOfDirs + "\n");
 
 		for(int i = 0; i <= listOfDirs.size() - 1; i++ ) {
@@ -54,11 +54,11 @@ public class Iteration1 {
 	}
 	
 	/**
-	 * Iteration1 constructor
+	 * Iteration2 constructor
 	 * Takes given pathName
 	 *  
 	 */
-	public Iteration1(String pathName) {
+	public Iteration2(String pathName) {
 		listOfDirs.add(pathName);			//Might need to change this.. does 
 		File[] files = new File(pathName).listFiles();
 		pathFinder(files);
