@@ -1,8 +1,3 @@
-// CHANGES: - Changed javaFiles from File[] to ArrayList<File>
-// - Added ArrayList<JarFile> listOfJars
-// - getJarEntries now checks for directories and jars (but is untested; not sure if it actually works)
-// TODO: - Rewrite main function or constructor to call getJarEntries somewhere
-// - Test getJarEntries + debug
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -195,7 +190,6 @@ public class Iteration2 {
 	
 	/**
 	 * Method that increments the declaration and reference count
-	 * 
 	 */
 	
 	public void increment() {
