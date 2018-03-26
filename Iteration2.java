@@ -21,10 +21,10 @@ import java.util.zip.ZipEntry;
 import org.eclipse.jdt.core.dom.*;
 
 public class Iteration2 {
-	public static ArrayList<String> listOfDirs = new ArrayList<String>();
-	public static ArrayList<File> javaFiles = new ArrayList<File>();
-	public static ArrayList<String> typeDecs = new ArrayList<String>();
-	public static ArrayList<String> typeRefs = new ArrayList<String>();
+	public static ArrayList<String> listOfDirs;
+	public static ArrayList<File> javaFiles;
+	public static ArrayList<String> typeDecs;
+	public static ArrayList<String> typeRefs;
 	public static int count_dec;
 	public static int count_ref;
 	public String type;
@@ -37,6 +37,10 @@ public class Iteration2 {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
+		listOfDirs = new ArrayList<String>();
+		javaFiles = new ArrayList<File>();
+		typeDecs = new ArrayList<String>();
+		typeRefs = new ArrayList<String>();
 		int argsLength = args.length;
 		
 		// If invalid amount of arguments, print error message and terminate
